@@ -1,0 +1,543 @@
+@import "tailwindcss";
+
+/* BHEM Brand Colors */
+:root {
+  /* Primary Colors */
+  --bhem-orange: #F77C3B;
+  --bhem-tomato: #D44C2F;
+  --bhem-cream: #E9E2C5;
+  --bhem-yellow-ochre: #E6AC40;
+  
+  /* Secondary Colors */
+  --bhem-dark-brown: #693018;
+  --bhem-vibrant-orange: #FA9A4C;
+  --bhem-warm-yellow-brown: #DB9242;
+  --bhem-deep-brick: #B33B24;
+  
+  /* Neutral Colors */
+  --bhem-cream-white: #F3ECD5;
+  --bhem-deep-cocoa: #44200F;
+  
+  --background: var(--bhem-deep-cocoa);
+  --foreground: var(--bhem-cream);
+  
+  /* Safe area insets for devices with notches */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border: none;
+  outline: none;
+}
+
+/* Remove any default margins/padding that might cause white edges */
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  font-family: Arial, Helvetica, sans-serif;
+  overflow: hidden;
+  background: var(--background);
+  color: var(--foreground);
+  margin: 0;
+  padding: 0;
+}
+
+/* Desktop 16:9 ratio */
+@media (min-width: 768px) {
+  .fullpage-container {
+    aspect-ratio: 16/9;
+    width: 100vw;
+    height: 56.25vw;
+    max-height: 100vh;
+    max-width: 177.78vh;
+    margin: 0 auto;
+    position: relative;
+  }
+  
+  .fullpage-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: var(--bhem-deep-cocoa);
+  }
+}
+
+/* Mobile detection and orientation handling */
+@media (max-width: 767px) {
+  /* Force fullscreen on mobile */
+  html {
+    width: 100vw !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+  }
+  
+  body {
+    width: 100vw !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+  }
+  
+  .fullpage-container {
+    width: 100vw;
+    height: 100vh;
+  }
+  
+  .fullpage-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: var(--bhem-deep-cocoa);
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+  }
+  
+  /* Force landscape orientation hint for mobile */
+  @media (orientation: portrait) {
+    .orientation-hint {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: var(--bhem-deep-cocoa);
+      color: var(--bhem-cream);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      text-align: center;
+      padding: 2rem;
+    }
+    
+    .orientation-hint .rotate-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      animation: rotate 2s infinite;
+    }
+    
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(90deg); }
+    }
+  }
+  
+  /* Hide orientation hint in landscape */
+  @media (orientation: landscape) {
+    .orientation-hint {
+      display: none;
+    }
+    
+    .fullpage-container {
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+    }
+  }
+}
+
+/* FullPage.js customization */
+#fullpage {
+  height: 100vh !important;
+}
+
+.fp-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: var(--bhem-deep-cocoa) !important;
+  height: 100vh !important;
+}
+
+.fp-slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Force FullPage to recognize sections */
+.section {
+  height: 100vh !important;
+  width: 100vw !important;
+}
+
+/* Section content styling */
+.section-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--bhem-cream);
+  position: relative;
+  padding: 0;
+  margin: 0;
+  background: var(--bhem-deep-cocoa);
+}
+
+/* FullPage navigation styling */
+#fp-nav ul li a span,
+.fp-slidesNav ul li a span {
+  background: #FA9A4C !important;
+}
+
+#fp-nav ul li a.active span,
+.fp-slidesNav ul li a.active span,
+#fp-nav ul li:hover a.active span,
+.fp-slidesNav ul li:hover a.active span {
+  background: #B33B24 !important;
+  border-color: #FA9A4C !important;
+}
+
+/* Simplified mobile navigation positioning */
+@media (max-width: 767px) and (orientation: landscape) {
+  #fp-nav ul li {
+    margin: 7px 0 !important;
+  }
+  
+  #fp-nav ul li a span {
+    width: 8px !important;
+    height: 8px !important;
+  }
+}
+
+/* PDF page styling */
+.react-pdf__Page {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: var(--bhem-deep-cocoa) !important;
+}
+
+.react-pdf__Page__canvas {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  background: var(--bhem-deep-cocoa) !important;
+}
+
+/* Mobile landscape specific adjustments */
+@media (max-width: 767px) and (orientation: landscape) {
+  /* Aggressive viewport and body reset */
+  html {
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: var(--bhem-deep-cocoa) !important;
+  }
+  
+  body {
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: var(--bhem-deep-cocoa) !important;
+    transform: translateZ(0) !important;
+    -webkit-transform: translateZ(0) !important;
+  }
+  
+  /* Force all containers to exact viewport size */
+  .fullpage-wrapper {
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: var(--bhem-deep-cocoa) !important;
+    transform: translateZ(0) !important;
+  }
+  
+  .fullpage-container {
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: var(--bhem-deep-cocoa) !important;
+  }
+  
+  #fullpage {
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: var(--bhem-deep-cocoa) !important;
+  }
+  
+  .fp-section {
+    width: 100vw !important;
+    height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    position: relative !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: var(--bhem-deep-cocoa) !important;
+  }
+  
+  .section {
+    width: 100vw !important;
+    height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    position: relative !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: var(--bhem-deep-cocoa) !important;
+  }
+  
+  .section-content {
+    width: 100vw !important;
+    height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: var(--bhem-deep-cocoa) !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transform: translateZ(0) !important;
+  }
+  
+  .react-pdf__Page {
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: var(--bhem-deep-cocoa) !important;
+  }
+  
+  .react-pdf__Page__canvas {
+    width: 100vw !important;
+    height: 100vh !important;
+    object-fit: cover !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    background: var(--bhem-deep-cocoa) !important;
+  }
+  
+  /* Eliminate any possible gaps or borders */
+  * {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Allow text selection only for PDF content */
+  .react-pdf__Page__textContent,
+  .react-pdf__Page__textContent * {
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+  }
+  
+  /* Hide all scrollbars */
+  ::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  
+  /* Force no margins or padding on any element */
+  * {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Remove browser default spacing */
+  html, body, div, span, applet, object, iframe,
+  h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+  a, abbr, acronym, address, big, cite, code,
+  del, dfn, em, img, ins, kbd, q, s, samp,
+  small, strike, strong, sub, sup, tt, var,
+  b, u, i, center,
+  dl, dt, dd, ol, ul, li,
+  fieldset, form, label, legend,
+  table, caption, tbody, tfoot, thead, tr, th, td,
+  article, aside, canvas, details, embed, 
+  figure, figcaption, footer, header, hgroup, 
+  menu, nav, output, ruby, section, summary,
+  time, mark, audio, video {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    vertical-align: baseline !important;
+  }
+}
+
+/* Let react-pdf messages show normally, JS will handle specific ones */
+
+/* Ensure all PDF related components have consistent background */
+.react-pdf__Document {
+  background: var(--bhem-deep-cocoa) !important;
+}
+
+.react-pdf__Page__svg {
+  background: var(--bhem-deep-cocoa) !important;
+}
+
+/* Mobile specific PDF background enforcement */
+@media (max-width: 767px) {
+  .react-pdf__Document,
+  .react-pdf__Page,
+  .react-pdf__Page__canvas,
+  .react-pdf__Page__svg {
+    background: var(--bhem-deep-cocoa) !important;
+    background-color: var(--bhem-deep-cocoa) !important;
+  }
+}
+
+/* PDF Text and Annotation Layer Styling */
+.react-pdf__Page__textContent {
+  user-select: text;
+  pointer-events: auto;
+}
+
+.react-pdf__Page__textContent ::selection {
+  background: rgba(247, 124, 59, 0.3); /* BHEM orange with transparency */
+}
+
+.react-pdf__Page__textContent ::-moz-selection {
+  background: rgba(247, 124, 59, 0.3); /* BHEM orange with transparency */
+}
+
+.react-pdf__Page__annotations {
+  pointer-events: auto;
+}
+
+/* Loading logo animation */
+.loading-logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  background: white;
+  border-radius: 50%;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: breathe 2s ease-in-out infinite;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  z-index: 1000;
+}
+
+.loading-logo {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+@keyframes breathe {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+  }
+}
+
+/* Hide FullPage.js watermark */
+.fp-watermark {
+  display: none !important;
+}
+
+.fp-watermark a {
+  display: none !important;
+}
+
+/* Remove "Made with fullPage.js" text */
+#fullpage .fp-watermark,
+#fullpage .fp-watermark a,
+body .fp-watermark,
+body .fp-watermark a {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
