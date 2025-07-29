@@ -101,6 +101,7 @@ const PDFPageComponent: React.FC<PDFPageProps> = ({ pageNumber, numPages }) => {
         width={pageWidth}
         renderTextLayer={true}
         renderAnnotationLayer={true}
+        devicePixelRatio={window.devicePixelRatio || 1}
       />
       <div style={{ 
         position: 'absolute', 
@@ -180,6 +181,14 @@ const FullPagePDFViewer: React.FC = () => {
     cMapUrl: 'https://unpkg.com/pdfjs-dist@5.3.31/cmaps/',
     cMapPacked: true,
     standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@5.3.31/standard_fonts/',
+    // Ensure text layer rendering with precise positioning
+    renderTextLayer: true,
+    textLayerMode: 1,
+    enableXfa: true,
+    // Ensure precise text positioning
+    fontExtraProperties: true,
+    disableFontFace: false,
+    useSystemFonts: false
   }), []);
 
   // Custom loading component with just space
