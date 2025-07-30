@@ -1,7 +1,0 @@
-User-Agent: *
-Allow: /
-Disallow: /_next/
-Disallow: /api/
-Disallow: *.json
-
-Sitemap: https://bhem.ca/sitemap.xml

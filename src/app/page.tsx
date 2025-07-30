@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 
 const FullPagePDFViewer = dynamic(
   () => import('./components/FullPagePDFViewer'),
@@ -11,10 +12,13 @@ const FullPagePDFViewer = dynamic(
         <div className="fullpage-container">
           <div className="section-content">
             <div className="loading-logo-container">
-              <img 
+              <Image 
                 src="/logo.png" 
                 alt="BHEM Logo" 
                 className="loading-logo"
+                width={150}
+                height={150}
+                priority
               />
             </div>
           </div>
