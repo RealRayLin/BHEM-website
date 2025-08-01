@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/* BHEM Brand Colors */
+:root {
+  /* Primary Colors */
+  --bhem-orange: #F77C3B;
+  --bhem-tomato: #D44C2F;
+  --bhem-light-beige: #E9E2C5;
+  --bhem-bright-yellow-ochre: #E6AC40;
+  
+  /* Secondary Colors */
+  --bhem-dark-brown: #693018;
+  --bhem-vibrant-orange: #FA9A4C;
+  --bhem-warm-yellow-brown: #DB9242;
+  --bhem-deep-brick: #B33B24;
+  
+  /* Neutral Colors */
+  --bhem-cream: #F3ECD5;
+  --bhem-deep-cocoa: #44200F;
+  
+  --background: var(--bhem-deep-cocoa);
+  --foreground: var(--bhem-cream);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+
+/* Global background to prevent white flash */
+html, body {
+  background-color: var(--bhem-deep-cocoa, #44200F) !important;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+#__next, [data-nextjs-scroll-focus-boundary] {
+  background-color: var(--bhem-deep-cocoa, #44200F);
+  min-height: 100vh;
+  width: 100%;
+}
