@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF Test</title>
+</head>
+<body>
+    <h1>PDF Test</h1>
+    <h2>Direct PDF Link</h2>
+    <a href="/BHEM Brand Deck-v2-Website.pdf" target="_blank">Click to open PDF directly</a>
+    
+    <h2>PDF Worker Test</h2>
+    <a href="/pdf/pdf.worker.min.js" target="_blank">Check PDF Worker</a>
+    
+    <h2>Embedded PDF</h2>
+    <embed src="/BHEM Brand Deck-v2-Website.pdf" width="600" height="400" type="application/pdf">
+    
+    <script>
+        console.log('Testing PDF accessibility...');
+        fetch('/BHEM Brand Deck-v2-Website.pdf')
+            .then(response => {
+                console.log('PDF fetch response:', response.status, response.statusText);
+                return response.blob();
+            })
+            .then(blob => {
+                console.log('PDF blob size:', blob.size, 'bytes');
+            })
+            .catch(error => {
+                console.error('PDF fetch error:', error);
+            });
+    </script>
+</body>
+</html>

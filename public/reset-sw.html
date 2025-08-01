@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reset Service Worker</title>
+</head>
+<body>
+    <h1>Resetting Service Worker...</h1>
+    <p id="status">Working...</p>
+    
+    <script>
+        async function resetServiceWorker() {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                // Clear all caches
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(name => caches.delete(name)));
+                    statusEl.innerHTML += '<br>✓ All caches cleared';
+                }
+                
+                // Unregister all service workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registrations.map(reg => reg.unregister()));
+                    statusEl.innerHTML += '<br>✓ All service workers unregistered';
+                }
+                
+                statusEl.innerHTML += '<br><br><strong>✓ Reset complete! You can close this tab and refresh your main page.</strong>';
+                
+                // Auto-redirect after 3 seconds
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 3000);
+                
+            } catch (error) {
+                statusEl.innerHTML += '<br>❌ Error: ' + error.message;
+            }
+        }
+        
+        resetServiceWorker();
+    </script>
+</body>
+</html>
