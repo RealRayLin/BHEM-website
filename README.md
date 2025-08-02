@@ -1,8 +1,8 @@
-# BHEM Website v0 Setup Report | Rapport de Configuration du Site Web BHEM v0 | BHEM官网v0版本搭建报告
+# 🇬🇧 🇫🇷 🇨🇳 BHEM - Black Heritage Experience Manitoba Website v0
 
 ---
 
-## 🇺🇸 English Version
+## 🇬🇧 English Version
 
 ## Usage
 
