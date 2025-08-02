@@ -2,7 +2,7 @@
 
 ---
 
-## 🇬🇧 English Version
+## 🇬🇧 English Intro
 
 ## Usage
 
@@ -124,7 +124,7 @@ BHEMwebsite/
 
 ---
 
-## 🇫🇷 Version Française
+## 🇫🇷 Intro Française
 
 ## Utilisation
 
@@ -246,7 +246,7 @@ BHEMwebsite/
 
 ---
 
-## 🇨🇳 简体中文版本
+## 🇨🇳 简体中文 Intro
 
 ## 使用方法
 
