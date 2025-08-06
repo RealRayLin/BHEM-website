@@ -51,7 +51,8 @@ const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({
   const [showDonateCapsule, setShowDonateCapsule] = useState<boolean>(false);
   const [donateText, setDonateText] = useState<string>('DONATE');
   const [isDonateTextTransitioning, setIsDonateTextTransitioning] = useState<boolean>(false);
-  const [capsuleTransitionState, setCapsuleTransitionState] = useState<'single' | 'transitioning' | 'dual'>('single');
+  const [showFormCapsule, setShowFormCapsule] = useState<boolean>(false);
+  const [capsuleTransitionState, setCapsuleTransitionState] = useState<'single' | 'transitioning' | 'dual' | 'triple'>('single');
   const donateTextTimeout = useRef<NodeJS.Timeout | null>(null);
   
   const containerRef = useRef<HTMLDivElement>(null);
@@ -380,6 +381,12 @@ Call (204) 795-7465 or info@ACOMI.ca for arrangements. Cash or cheque welcomed.`
     }
   }, []);
 
+  const handleFormClick = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      window.open('https://forms.gle/Jsy12gVAPV8GE5ai8', '_blank');
+    }
+  }, []);
+
   const getPageTransitionClass = useCallback(() => {
     if (!pageTransition.direction) return '';
     
@@ -533,6 +540,16 @@ Call (204) 795-7465 or info@ACOMI.ca for arrangements. Cash or cheque welcomed.`
         
         setTimeout(() => {
           setCapsuleTransitionState('dual');
+        }, 400);
+      }, 400);
+    } else if (currentPage >= 16 && capsuleTransitionState === 'dual') {
+      setCapsuleTransitionState('transitioning');
+      
+      setTimeout(() => {
+        setShowFormCapsule(true);
+        
+        setTimeout(() => {
+          setCapsuleTransitionState('triple');
         }, 400);
       }, 400);
     }
@@ -821,6 +838,21 @@ Call (204) 795-7465 or info@ACOMI.ca for arrangements. Cash or cheque welcomed.`
                 transform: scale(1);
               }
             }
+            
+            @keyframes breathingForm {
+              0% {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 20px rgba(64, 172, 230, 0.4);
+                transform: scale(1);
+              }
+              50% {
+                box-shadow: 0 6px 30px rgba(0, 0, 0, 0.2), 0 0 30px rgba(64, 172, 230, 0.8);
+                transform: scale(1.05);
+              }
+              100% {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 20px rgba(64, 172, 230, 0.4);
+                transform: scale(1);
+              }
+            }
           `}</style>
           
           {/* White capsule - fixed bottom center position */}
@@ -845,7 +877,7 @@ Call (204) 795-7465 or info@ACOMI.ca for arrangements. Cash or cheque welcomed.`
               fontWeight: '800',
               color: '#333',
               cursor: 'pointer',
-              width: '100px',
+              width: '120px',
               height: '50px',
               display: 'flex',
               alignItems: 'center',
@@ -915,8 +947,8 @@ Call (204) 795-7465 or info@ACOMI.ca for arrangements. Cash or cheque welcomed.`
               animation: 'breathingDonate 3s ease-in-out infinite',
               userSelect: 'none',
               WebkitUserSelect: 'none',
-              width: 'fit-content',
-              minWidth: 'auto'
+              width: '120px',
+              minWidth: '120px'
             }}
             onMouseEnter={(e) => {
               if (showDonateCapsule) {
@@ -955,6 +987,79 @@ Call (204) 795-7465 or info@ACOMI.ca for arrangements. Cash or cheque welcomed.`
               }}
             >
               {donateText}
+            </span>
+          </button>
+          
+          {/* Blue Form Capsule - appears above yellow capsule */}
+          <button
+            className="form-capsule"
+            onClick={handleFormClick}
+            style={{
+              position: 'fixed',
+              bottom: showFormCapsule ? '150px' : '90px',
+              left: '0',
+              right: '0',
+              margin: '0 auto',
+              opacity: showFormCapsule ? 1 : 0,
+              pointerEvents: showFormCapsule ? 'auto' : 'none',
+              zIndex: 9997,
+              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s ease-in-out',
+              background: 'rgba(64, 172, 230, 0.95)',
+              backdropFilter: 'blur(10px)',
+              border: 'none',
+              borderRadius: '25px',
+              padding: '12px 20px',
+              fontSize: '14px',
+              fontWeight: '800',
+              color: '#333',
+              cursor: 'pointer',
+              height: '50px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              animation: 'breathingForm 3s ease-in-out infinite',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              width: '120px',
+              minWidth: '120px'
+            }}
+            onMouseEnter={(e) => {
+              if (showFormCapsule) {
+                e.currentTarget.style.background = 'rgba(64, 172, 230, 1)';
+                e.currentTarget.style.animationPlayState = 'paused';
+                e.currentTarget.style.transform = 'translateX(-50%) scale(1.05)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (showFormCapsule) {
+                e.currentTarget.style.background = 'rgba(64, 172, 230, 0.95)';
+                e.currentTarget.style.animationPlayState = 'running';
+                e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
+              }
+            }}
+            onTouchStart={(e) => {
+              if (showFormCapsule) {
+                e.currentTarget.style.background = 'rgba(64, 172, 230, 1)';
+                e.currentTarget.style.animationPlayState = 'paused';
+                e.currentTarget.style.transform = 'translateX(-50%) scale(1.05)';
+              }
+            }}
+            onTouchEnd={(e) => {
+              if (showFormCapsule) {
+                e.currentTarget.style.background = 'rgba(64, 172, 230, 0.95)';
+                e.currentTarget.style.animationPlayState = 'running';
+                e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
+              }
+            }}
+          >
+            <span
+              style={{
+                opacity: 1,
+                transition: 'opacity 0.3s ease',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              FILL FORM
             </span>
           </button>
         </>,
