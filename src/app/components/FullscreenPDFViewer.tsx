@@ -877,7 +877,7 @@ Call (204) 795-7465 or info@ACOMI.ca for arrangements. Cash or cheque welcomed.`
               fontWeight: '800',
               color: '#333',
               cursor: 'pointer',
-              width: '120px',
+              width: '200px',
               height: '50px',
               display: 'flex',
               alignItems: 'center',
@@ -947,8 +947,8 @@ Call (204) 795-7465 or info@ACOMI.ca for arrangements. Cash or cheque welcomed.`
               animation: 'breathingDonate 3s ease-in-out infinite',
               userSelect: 'none',
               WebkitUserSelect: 'none',
-              width: '120px',
-              minWidth: '120px'
+              width: '200px',
+              minWidth: '200px'
             }}
             onMouseEnter={(e) => {
               if (showDonateCapsule) {
@@ -1020,8 +1020,8 @@ Call (204) 795-7465 or info@ACOMI.ca for arrangements. Cash or cheque welcomed.`
               animation: 'breathingForm 3s ease-in-out infinite',
               userSelect: 'none',
               WebkitUserSelect: 'none',
-              width: '120px',
-              minWidth: '120px'
+              width: '200px',
+              minWidth: '200px'
             }}
             onMouseEnter={(e) => {
               if (showFormCapsule) {
@@ -1059,7 +1059,7 @@ Call (204) 795-7465 or info@ACOMI.ca for arrangements. Cash or cheque welcomed.`
                 whiteSpace: 'nowrap'
               }}
             >
-              FILL FORM
+              FILL FORM & JOIN US
             </span>
           </button>
         </>,
