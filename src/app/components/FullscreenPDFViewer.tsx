@@ -24,7 +24,7 @@ interface FullscreenPDFViewerProps {
 }
 
 const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({ 
-  pdfUrl = "/BHEM Brand Deck-v2-Website.pdf" 
+  pdfUrl = "/BHEM Brand Deck-Website.pdf" 
 }) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
