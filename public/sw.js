@@ -5,7 +5,7 @@ const urlsToCache = [
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
   '/logo.png',
-  '/BHEM Brand Deck-v2-Website.pdf',
+  '/BHEM Brand Deck-Website.pdf',
   '/robots.txt',
   '/sitemap.xml'
 ];
@@ -21,6 +21,15 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Skip service worker for search engine crawlers
+  const userAgent = event.request.headers.get('user-agent') || '';
+  const isSearchBot = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot/i.test(userAgent);
+  
+  if (isSearchBot) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  
   if (event.request.url.includes('/_next/static/') && event.request.url.includes('?v=')) {
     event.respondWith(fetch(event.request));
     return;

@@ -2,8 +2,14 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
 <loc>https://bhem.ca</loc>
-<lastmod>2025-08-01T08:11:25.246Z</lastmod>
+<lastmod>2025-08-07T05:25:12.076Z</lastmod>
 <changefreq>weekly</changefreq>
 <priority>1</priority>
+</url>
+<url>
+<loc>https://bhem.ca/BHEM Brand Deck-Website.pdf</loc>
+<lastmod>2025-08-07T05:25:12.076Z</lastmod>
+<changefreq>monthly</changefreq>
+<priority>0.8</priority>
 </url>
 </urlset>

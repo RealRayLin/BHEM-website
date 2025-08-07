@@ -72,7 +72,7 @@ BHEMwebsite/
 │       ├── layout.tsx                    # Root layout
 │       └── page.tsx                      # Homepage
 ├── public/
-│   └── BHEM Brand Deck-v2-Website.pdf # PDF file
+│   └── BHEM Brand Deck-Website.pdf # PDF file
 ├── package.json                          # Dependencies configuration
 ├── verify.sh                            # Verification script
 └── 0-AIGcode/
@@ -194,7 +194,7 @@ BHEMwebsite/
 │       ├── layout.tsx                    # Mise en page racine
 │       └── page.tsx                      # Page d'accueil
 ├── public/
-│   └── BHEM Brand Deck-v2-Website.pdf # Fichier PDF
+│   └── BHEM Brand Deck-Website.pdf # Fichier PDF
 ├── package.json                          # Configuration des dépendances
 ├── verify.sh                            # Script de vérification
 └── 0-AIGcode/
@@ -316,7 +316,7 @@ BHEMwebsite/
 │       ├── layout.tsx                    # 根布局
 │       └── page.tsx                      # 首页
 ├── public/
-│   └── BHEM Brand Deck-v2-Website.pdf # PDF文件
+│   └── BHEM Brand Deck-Website.pdf # PDF文件
 ├── package.json                          # 依赖配置
 ├── verify.sh                            # 验证脚本
 └── 0-AIGcode/

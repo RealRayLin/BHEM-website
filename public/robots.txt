@@ -1,12 +1,31 @@
 User-agent: *
 Allow: /
 
-# Sitemap
+# Allow specific search engine bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+# Sitemap location
 Sitemap: https://bhem.ca/sitemap.xml
 
-# Crawl-delay for better server performance
-Crawl-delay: 1
+# Crawl-delay for better server performance (removed to encourage more frequent crawling)
+# Crawl-delay: 1
 
-# Disallow admin or private directories if any exist
-# Disallow: /admin/
-# Disallow: /private/
+# Block access to Next.js internal files
+Disallow: /_next/static/chunks/
+Disallow: /.next/
+Disallow: /api/
+
+# Allow access to important resources
+Allow: /icons/
+Allow: /manifest.json
+Allow: /*.pdf

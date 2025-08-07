@@ -96,7 +96,7 @@
         "transform": "lodash/{{member}}"
       }
     },
-    "outputFileTracingRoot": "/Users/macbooklin/AIGcode/0-Judy/BHEMwebsite",
+    "outputFileTracingRoot": "/Users/macbooklin/AIGcode/0-Judy/BHEM-website",
     "allowedDevOrigins": [
       "192.168.50.245"
     ],
@@ -290,10 +290,10 @@
     "bundlePagesRouterDependencies": false,
     "configFileName": "next.config.ts",
     "turbopack": {
-      "root": "/Users/macbooklin/AIGcode/0-Judy/BHEMwebsite"
+      "root": "/Users/macbooklin/AIGcode/0-Judy/BHEM-website"
     }
   },
-  "appDir": "/Users/macbooklin/AIGcode/0-Judy/BHEMwebsite",
+  "appDir": "/Users/macbooklin/AIGcode/0-Judy/BHEM-website",
   "relativeAppDir": "",
   "files": [
     ".next/routes-manifest.json",

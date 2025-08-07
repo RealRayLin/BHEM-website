@@ -48,6 +48,9 @@ export const metadata: Metadata = {
   },
   verification: {
     google: "",
+    other: {
+      "msvalidate.01": "",
+    },
   },
 };
 
@@ -86,6 +89,18 @@ export default function RootLayout({
         
         {/* Security */}
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+        
+        {/* Additional SEO Meta Tags for Bing */}
+        <meta name="revisit-after" content="7 days" />
+        <meta name="distribution" content="global" />
+        <meta name="rating" content="general" />
+        <meta name="language" content="en-CA" />
+        <meta name="geo.region" content="CA-MB" />
+        <meta name="geo.placename" content="Manitoba, Canada" />
+        
+        {/* Bing/Microsoft specific tags */}
+        <meta name="application-name" content="BHEM - Black Heritage Experience Manitoba" />
+        <meta name="msapplication-tooltip" content="Black Heritage Experience Manitoba" />
         
         {/* Structured Data - Organization */}
         <script
