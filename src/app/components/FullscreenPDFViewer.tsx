@@ -326,27 +326,31 @@ const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({
   }, [currentPage, numPages, navigateWithAnimation, restartIndicatorCarousel]);
 
   const handleDonateClick = useCallback(async () => {
-    const donationInfo = `https://www.BHEM.ca/
-Black Heritage Experience Manitoba
+    const donationInfo = `BLACK HERITAGE EXPERIENCE MANITOBA
+
+Website: www.BHEM.ca
 
 WAYS TO GIVE:
 Convenient pathways to secure your Founding 100 status with your $100 investment
 
 A - E-TRANSFER
-Send $100 to info@ACOMI.ca. 
+Send $100 to: info@ACOMI.ca
 Include your name and "Black History Museum" in message
 
-B- ONLINE PORTAL
-https://www.canadahelps.org/en/dn/3162
+B - ONLINE PORTAL
+Visit: www.canadahelps.org/en/dn/3162
 Select dropdown: #7: Black History Museum
 
-C- MAIL DONATION
-African Communities of Manitoba Inc., 
-200-301 Nassau Street N., Winnipeg, MB R3L 2J5
-https://maps.app.goo.gl/r477pRFGsmaxBbyMA
+C - MAIL DONATION
+African Communities of Manitoba Inc.
+200-301 Nassau Street N.
+Winnipeg, MB R3L 2J5
+Map: maps.app.goo.gl/r477pRFGsmaxBbyMA
 
 D - PERSONAL CONTACT
-Call (204) 795-7465 or info@ACOMI.ca for arrangements. Cash or cheque welcomed.`;
+Call: (204) 795-7465
+Email: info@ACOMI.ca
+Cash or cheque welcomed for arrangements.`;
 
     if (typeof window !== 'undefined' && navigator?.clipboard?.writeText) {
       try {
