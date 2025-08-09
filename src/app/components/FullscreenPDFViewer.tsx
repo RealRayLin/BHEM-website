@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import LoadingSpinner from './LoadingSpinner';
+import YoutubePlaylistViewer from './YoutubePlaylistViewer';
 
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -19,6 +20,13 @@ const Page = dynamic(
   { ssr: false }
 );
 
+interface PlaylistPage {
+  type: 'playlist';
+  playlistUrl: string;
+  title: string;
+  subtitle: string;
+}
+
 interface FullscreenPDFViewerProps {
   pdfUrl?: string;
 }
@@ -26,6 +34,16 @@ interface FullscreenPDFViewerProps {
 const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({ 
   pdfUrl = "/BHEM Brand Deck-Website.pdf" 
 }) => {
+  // Playlist pages configuration - insert between PDF pages
+  const playlistPages = useMemo(() => ({
+    1.5: {
+      type: 'playlist' as const,
+      playlistUrl: 'https://www.youtube.com/playlist?list=PLUVpFBRxKq4N5LUQ0nJY1u8PZ22M2EzE4',
+      title: 'Journeying to Emancipation',
+      subtitle: 'Friday, August 1, 2025'
+    }
+  }), []);
+
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isReady, setIsReady] = useState<boolean>(false);
@@ -117,6 +135,35 @@ const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({
     return () => window.removeEventListener('resize', updatePageDimensions);
   }, []);
 
+  // Helper functions for playlist pages
+  const isPlaylistPage = useCallback((page: number): boolean => {
+    return page in playlistPages;
+  }, [playlistPages]);
+
+  const getPlaylistData = useCallback((page: number): PlaylistPage | null => {
+    return playlistPages[page as keyof typeof playlistPages] || null;
+  }, [playlistPages]);
+
+  // Convert display page to actual PDF page number
+  const getActualPDFPage = useCallback((displayPage: number): number => {
+    if (displayPage <= 1) return 1;
+    if (isPlaylistPage(displayPage)) return -1; // This shouldn't be called for playlist pages
+    
+    // Simple mapping for our case:
+    // Display 1 -> PDF 1
+    // Display 1.5 -> playlist (invalid for PDF)
+    // Display 2 -> PDF 2
+    // Display 3 -> PDF 3, etc.
+    
+    // Since playlist page is at 1.5, any display page >= 2 maps directly to the same PDF page
+    if (displayPage >= 2) {
+      return Math.floor(displayPage); // 2.0->2, 3.0->3, etc.
+    } else {
+      return displayPage; // 1->1
+    }
+  }, [isPlaylistPage]);
+
+
 
   const synchronizeTextLayer = useCallback(() => {
     if (!pageRef.current) return;
@@ -163,8 +210,9 @@ const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({
     setNumPages(numPages);
     setHasError(false);
     
+    // Ensure current page is within valid range including playlist pages
     setCurrentPage(prev => {
-      if (prev < 1 || prev > numPages) {
+      if (prev < 1 || (prev > numPages && prev !== 1.5)) {
         return 1;
       }
       return prev;
@@ -189,7 +237,7 @@ const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({
   };
 
   const onPageLoadSuccess = useCallback((pageNumber: number) => {
-    if (pageNumber === currentPage) {
+    if (!isPlaylistPage(currentPage) && pageNumber === getActualPDFPage(currentPage)) {
       setTimeout(() => synchronizeTextLayer(), 100);
     }
     
@@ -215,7 +263,7 @@ const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({
       
       return newSet;
     });
-  }, [numPages, currentPage, synchronizeTextLayer]);
+  }, [numPages, currentPage, synchronizeTextLayer, getActualPDFPage, isPlaylistPage]);
 
   const onDocumentLoadError = (error: Error) => {
     console.error('❌ PDF loading error:', error);
@@ -241,6 +289,8 @@ const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({
   }, []);
 
   const restartIndicatorCarousel = useCallback((delay: number = 1500) => {
+    // Carousel works for both PDF pages and playlist pages
+    
     setTimeout(() => {
       if (indicatorInterval.current) {
         clearInterval(indicatorInterval.current);
@@ -269,20 +319,47 @@ const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({
       return;
     }
     
-    if (numPages <= 0 || currentPage < 1 || currentPage > numPages) {
+    if (numPages <= 0 || currentPage < 1) {
       return;
     }
     
-    const targetPage = direction === 'next' ? currentPage + 1 : currentPage - 1;
+    let targetPage: number;
     
-    if (targetPage < 1 || targetPage > numPages) {
+    if (direction === 'next') {
+      if (currentPage === 1) {
+        targetPage = 1.5; // Go to playlist page after page 1
+      } else if (currentPage === 1.5) {
+        targetPage = 2; // Go to page 2 after playlist page
+      } else if (currentPage >= numPages) {
+        targetPage = 1; // Loop back to first page
+      } else {
+        targetPage = currentPage + 1;
+      }
+    } else {
+      if (currentPage === 2) {
+        targetPage = 1.5; // Go back to playlist page from page 2
+      } else if (currentPage === 1.5) {
+        targetPage = 1; // Go back to page 1 from playlist page
+      } else if (currentPage <= 1) {
+        targetPage = numPages; // Go to last page from first page
+      } else {
+        targetPage = currentPage - 1;
+      }
+    }
+    
+    // Valid pages are: 1, 1.5, 2, 3, ..., numPages
+    if (targetPage < 1 || (targetPage > numPages && targetPage !== 1.5)) {
       return;
     }
     
     if (indicatorInterval.current) {
       clearInterval(indicatorInterval.current);
     }
-    setShowPageNumber(true); // 显示新页码
+    
+    // For playlist pages, don't show page numbers
+    if (!isPlaylistPage(targetPage)) {
+      setShowPageNumber(true); // Show new page number for PDF pages
+    }
     
     setIsNavigating(true);
     lastNavigationTime.current = now;
@@ -307,7 +384,7 @@ const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({
       }, 100);
     }, 200);
     
-  }, [currentPage, numPages, isNavigating, animationInitialized, restartIndicatorCarousel]);
+  }, [currentPage, numPages, isNavigating, animationInitialized, restartIndicatorCarousel, isPlaylistPage]);
 
   const handleIndicatorClick = useCallback(() => {
     if (indicatorInterval.current) {
@@ -323,7 +400,7 @@ const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({
       navigateWithAnimation('next', 'right');
     }
     
-  }, [currentPage, numPages, navigateWithAnimation, restartIndicatorCarousel]);
+  }, [currentPage, navigateWithAnimation, restartIndicatorCarousel, numPages]);
 
   const handleDonateClick = useCallback(async () => {
     const donationInfo = `BLACK HERITAGE EXPERIENCE MANITOBA
@@ -516,6 +593,7 @@ Cash or cheque welcomed for arrangements.`;
 
   useEffect(() => {
     const startCarousel = () => {
+      // Start carousel for both PDF pages and playlist pages
       indicatorInterval.current = setInterval(() => {
         setIsTextTransitioning(true);
         
@@ -533,7 +611,7 @@ Cash or cheque welcomed for arrangements.`;
         clearInterval(indicatorInterval.current);
       }
     };
-  }, []);
+  }, [currentPage, isPlaylistPage]);
 
   useEffect(() => {
     if (currentPage >= 15 && capsuleTransitionState === 'single') {
@@ -580,6 +658,15 @@ Cash or cheque welcomed for arrangements.`;
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (e.changedTouches.length !== 1) return;
     
+    // Skip touch gestures on playlist pages
+    if (isPlaylistPage(currentPage)) {
+      touchStartX.current = 0;
+      touchStartY.current = 0;
+      touchEndX.current = 0;
+      touchEndY.current = 0;
+      return;
+    }
+    
     const deltaX = touchEndX.current - touchStartX.current;
     const deltaY = touchEndY.current - touchStartY.current;
     const moveDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -606,6 +693,11 @@ Cash or cheque welcomed for arrangements.`;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip keyboard navigation on playlist pages
+      if (isPlaylistPage(currentPage)) {
+        return;
+      }
+      
       switch (e.key) {
         case 'ArrowRight':
           e.preventDefault();
@@ -628,6 +720,11 @@ Cash or cheque welcomed for arrangements.`;
     };
 
     const handleWheel = (e: WheelEvent) => {
+      // Skip wheel navigation on playlist pages
+      if (isPlaylistPage(currentPage)) {
+        return;
+      }
+      
       e.preventDefault(); // Prevent default scroll behavior
       if (e.deltaY > 0) {
         navigateWithAnimation('prev', 'up');
@@ -643,7 +740,7 @@ Cash or cheque welcomed for arrangements.`;
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('wheel', handleWheel);
     };
-  }, [navigateWithAnimation]);
+  }, [navigateWithAnimation, currentPage, isPlaylistPage]);
 
   if (hasError) {
     return (
@@ -703,7 +800,13 @@ Cash or cheque welcomed for arrangements.`;
         options={pdfOptions}
       >
         {/* Visible current page with navigation animations */}
-        {pageWidth > 0 && numPages > 0 && currentPage >= 1 && currentPage <= numPages && (
+        {pageWidth > 0 && numPages > 0 && currentPage >= 1 && !isPlaylistPage(currentPage) && (() => {
+          const actualPageNumber = getActualPDFPage(currentPage);
+          // Validate that the actual page number is within bounds
+          if (actualPageNumber < 1 || actualPageNumber > numPages) {
+            return null;
+          }
+          return (
           <div 
             className={`current-page-container ${getPageTransitionClass()}`}
             ref={pageRef}
@@ -714,20 +817,21 @@ Cash or cheque welcomed for arrangements.`;
             data-animation-state={pageTransition.isExiting ? 'exiting' : pageTransition.isEntering ? 'entering' : 'normal'}
           >
             <Page
-              pageNumber={currentPage}
+              pageNumber={actualPageNumber}
               width={pageWidth}
               height={pageHeight}
               renderTextLayer={true}
               renderAnnotationLayer={true}
               devicePixelRatio={8}
-              onLoadSuccess={() => onPageLoadSuccess(currentPage)}
-              onLoadError={(error) => onPageLoadError(currentPage, error)}
+              onLoadSuccess={() => onPageLoadSuccess(actualPageNumber)}
+              onLoadError={(error) => onPageLoadError(actualPageNumber, error)}
               onRenderSuccess={() => {
                 setTimeout(() => synchronizeTextLayer(), 50);
               }}
             />
           </div>
-        )}
+        );
+        })()}
 
         {/* Background preloading for remaining pages - Start after document loads */}
         {numPages > 1 && isReady && (
@@ -756,20 +860,57 @@ Cash or cheque welcomed for arrangements.`;
                 priorityPages.push(2);
               }
               
-              const prevPage = currentPage - 1;
-              const nextPage = currentPage + 1;
+              // Calculate adjacent PDF pages, handling playlist page logic
+              let prevPDFPage, nextPDFPage;
               
-              if (prevPage >= 1 && !loadedPages.has(prevPage) && !priorityPages.includes(prevPage)) {
-                priorityPages.push(prevPage);
+              if (isPlaylistPage(currentPage)) {
+                // For playlist pages, get adjacent actual PDF pages
+                const actualPrevPage = getActualPDFPage(currentPage - 0.5);
+                const actualNextPage = getActualPDFPage(currentPage + 0.5);
+                
+                if (Number.isInteger(actualPrevPage) && actualPrevPage >= 1) {
+                  prevPDFPage = actualPrevPage;
+                }
+                if (Number.isInteger(actualNextPage) && actualNextPage <= numPages) {
+                  nextPDFPage = actualNextPage;
+                }
+              } else {
+                // For regular PDF pages, get actual adjacent PDF pages
+                const prevDisplayPage = currentPage - 1;
+                const nextDisplayPage = currentPage + 1;
+                
+                if (prevDisplayPage >= 1 && !isPlaylistPage(prevDisplayPage)) {
+                  prevPDFPage = getActualPDFPage(prevDisplayPage);
+                }
+                if (nextDisplayPage <= numPages && !isPlaylistPage(nextDisplayPage)) {
+                  nextPDFPage = getActualPDFPage(nextDisplayPage);
+                }
               }
-              if (nextPage <= numPages && !loadedPages.has(nextPage) && !priorityPages.includes(nextPage)) {
-                priorityPages.push(nextPage);
+              
+              if (prevPDFPage && prevPDFPage >= 1 && prevPDFPage <= numPages && 
+                  Number.isInteger(prevPDFPage) && !loadedPages.has(prevPDFPage) && 
+                  !priorityPages.includes(prevPDFPage)) {
+                priorityPages.push(prevPDFPage);
+              }
+              if (nextPDFPage && nextPDFPage >= 1 && nextPDFPage <= numPages && 
+                  Number.isInteger(nextPDFPage) && !loadedPages.has(nextPDFPage) && 
+                  !priorityPages.includes(nextPDFPage)) {
+                priorityPages.push(nextPDFPage);
               }
               
               for (let i = 1; i <= numPages && priorityPages.length < 10; i++) {
-                if (!priorityPages.includes(i) && !loadedPages.has(i) && i !== currentPage) {
-                  priorityPages.push(i);
+                // Skip if already in priority list or loaded
+                if (priorityPages.includes(i) || loadedPages.has(i)) {
+                  continue;
                 }
+                
+                // Skip if this PDF page corresponds to the current display page
+                const actualCurrentPDFPage = isPlaylistPage(currentPage) ? null : getActualPDFPage(currentPage);
+                if (actualCurrentPDFPage && i === actualCurrentPDFPage) {
+                  continue;
+                }
+                
+                priorityPages.push(i);
               }
               
               return priorityPages.map(pageNumber => {
@@ -777,7 +918,8 @@ Cash or cheque welcomed for arrangements.`;
                   return null;
                 }
                 
-                if (pageNumber < 1 || pageNumber > numPages) {
+                // Validate page number is integer and within bounds
+                if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > numPages) {
                   return null;
                 }
                 
@@ -807,6 +949,30 @@ Cash or cheque welcomed for arrangements.`;
           </div>
         )}
       </Document>
+      </div>
+      
+      {/* YouTube playlist viewer - render outside PDF container */}
+      {isPlaylistPage(currentPage) && typeof window !== 'undefined' && (() => {
+        const playlistData = getPlaylistData(currentPage);
+        if (!playlistData) return null;
+        
+        return createPortal((
+          <div 
+            className={`fullscreen-playlist-page ${getPageTransitionClass()}`}
+            style={{
+              ...getPageTransitionStyle()
+            }}
+            data-current-page={currentPage}
+            data-animation-state={pageTransition.isExiting ? 'exiting' : pageTransition.isEntering ? 'entering' : 'normal'}
+          >
+            <YoutubePlaylistViewer
+              playlistUrl={playlistData.playlistUrl}
+              title={playlistData.title}
+              subtitle={playlistData.subtitle}
+            />
+          </div>
+        ), document.body);
+      })()}
       
       {/* Bottom floating indicator using Portal to avoid transform interference */}
       {!isLoading && numPages > 0 && typeof window !== 'undefined' && createPortal(
@@ -860,66 +1026,90 @@ Cash or cheque welcomed for arrangements.`;
           `}</style>
           
           {/* White capsule - fixed bottom center position */}
-          <button
-            className="bottom-indicator"
-            onClick={handleIndicatorClick}
+          <div
             style={{
               position: 'fixed',
               bottom: '30px',
               left: '0',
               right: '0',
-              margin: '0 auto',
-              opacity: 1,
-              pointerEvents: 'auto',
-              zIndex: 9999,
-              background: 'rgba(255, 255, 255, 0.9)',
-              backdropFilter: 'blur(10px)',
-              border: 'none',
-              borderRadius: '25px',
-              padding: '12px 24px',
-              fontSize: '16px',
-              fontWeight: '800',
-              color: '#333',
-              cursor: 'pointer',
-              width: '200px',
-              height: '50px',
               display: 'flex',
-              alignItems: 'center',
               justifyContent: 'center',
-              animation: 'breathingButton 3s ease-in-out infinite',
-              userSelect: 'none',
-              WebkitUserSelect: 'none'
+              alignItems: 'center',
+              pointerEvents: 'none',
+              zIndex: 9999
             }}
+          >
+            <button
+              className="bottom-indicator"
+              onClick={handleIndicatorClick}
+              style={{
+                opacity: 1,
+                pointerEvents: 'auto',
+                background: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(10px)',
+                border: 'none',
+                borderRadius: '50px', // Maximum border radius for perfect pill shape
+                padding: isPlaylistPage(currentPage) && showPageNumber ? '12px 32px' : '12px 24px',
+                fontSize: isPlaylistPage(currentPage) ? (showPageNumber ? '14px' : '16px') : '16px',
+                fontWeight: '800',
+                color: '#333',
+                cursor: 'pointer',
+                width: isPlaylistPage(currentPage) && showPageNumber ? 'auto' : '200px',
+                minWidth: '200px',
+                height: isPlaylistPage(currentPage) ? (showPageNumber ? '60px' : '50px') : '50px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                animation: 'breathingButton 3s ease-in-out infinite',
+                transition: 'width 0.3s ease-in-out, height 0.3s ease-in-out, font-size 0.3s ease-in-out, padding 0.3s ease-in-out',
+                userSelect: 'none',
+                WebkitUserSelect: 'none'
+              }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'rgba(255, 255, 255, 1)';
               e.currentTarget.style.animationPlayState = 'paused';
-              e.currentTarget.style.transform = 'translateX(-50%) scale(1.05)';
+              e.currentTarget.style.transform = 'scale(1.05)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
               e.currentTarget.style.animationPlayState = 'running';
-              e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
+              e.currentTarget.style.transform = 'scale(1)';
             }}
             onTouchStart={(e) => {
               e.currentTarget.style.background = 'rgba(255, 255, 255, 1)';
               e.currentTarget.style.animationPlayState = 'paused';
-              e.currentTarget.style.transform = 'translateX(-50%) scale(1.05)';
+              e.currentTarget.style.transform = 'scale(1.05)';
             }}
             onTouchEnd={(e) => {
               e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
               e.currentTarget.style.animationPlayState = 'running';
-              e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
+              e.currentTarget.style.transform = 'scale(1)';
             }}
           >
             <span
               style={{
                 opacity: isTextTransitioning ? 0 : 1,
-                transition: 'opacity 0.3s ease'
+                transition: 'opacity 0.3s ease',
+                textAlign: 'center',
+                lineHeight: '1.2',
+                whiteSpace: isPlaylistPage(currentPage) ? (showPageNumber ? 'pre-line' : 'nowrap') : 'nowrap',
+                display: 'inline-block'
               }}
             >
-              {showPageNumber ? currentPage : 'NEXT'}
+              {isPlaylistPage(currentPage) ? (() => {
+                const playlistData = getPlaylistData(currentPage);
+                if (!playlistData) return 'NEXT';
+                
+                // For playlist pages, alternate between custom title and 'NEXT'
+                if (showPageNumber) {
+                  return `${playlistData.title}\n${playlistData.subtitle || ''}`;
+                } else {
+                  return 'NEXT';
+                }
+              })() : (showPageNumber ? currentPage : 'NEXT')}
             </span>
           </button>
+          </div>
           
           {/* Yellow Donate Capsule - appears above white capsule */}
           <button
@@ -938,7 +1128,7 @@ Cash or cheque welcomed for arrangements.`;
               background: 'rgba(230, 172, 64, 0.95)',
               backdropFilter: 'blur(10px)',
               border: 'none',
-              borderRadius: '25px',
+              borderRadius: '50px', // Maximum border radius for perfect pill shape
               padding: '12px 20px',
               fontSize: '14px',
               fontWeight: '800',
@@ -1011,7 +1201,7 @@ Cash or cheque welcomed for arrangements.`;
               background: 'rgba(64, 172, 230, 0.95)',
               backdropFilter: 'blur(10px)',
               border: 'none',
-              borderRadius: '25px',
+              borderRadius: '50px', // Maximum border radius for perfect pill shape
               padding: '12px 20px',
               fontSize: '14px',
               fontWeight: '800',
@@ -1069,7 +1259,6 @@ Cash or cheque welcomed for arrangements.`;
         </>,
         document.body
       )}
-      </div>
     </>
   );
 };
