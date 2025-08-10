@@ -14,41 +14,65 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BHEM - Black Heritage Experience Manitoba",
-  description: "Official website of Black Heritage Experience Manitoba showcasing our brand and mission to celebrate and preserve Black heritage in Manitoba, Canada.",
-  keywords: "BHEM, Black Heritage, Manitoba, Canada, African Canadian, Black History, Cultural Heritage, Community",
-  authors: [{ name: "BHEM - Black Heritage Experience Manitoba" }],
-  creator: "BHEM - Black Heritage Experience Manitoba",
-  publisher: "BHEM - Black Heritage Experience Manitoba",
-  robots: "index, follow",
-  alternates: {
-    canonical: "https://bhem.ca",
+  metadataBase: new URL('https://bhem.ca'),
+  title: {
+    default: 'BHEM - Black Heritage Experience Manitoba',
+    template: '%s | BHEM - Black Heritage Experience Manitoba'
+  },
+  description: 'Black Heritage Experience Manitoba (BHEM) - Celebrating and preserving African heritage, culture, and history in Manitoba, Canada. Explore our journey to emancipation and rich cultural legacy.',
+  keywords: ['Black Heritage', 'African Canadian Heritage', 'Manitoba History', 'Cultural Heritage', 'Emancipation', 'Black History Museum', 'BHEM', 'African Communities Manitoba', 'Black History Canada', 'Heritage Preservation', 'Cultural Education', 'Community Heritage'],
+  authors: [{ name: 'African Communities of Manitoba Inc.' }],
+  creator: 'African Communities of Manitoba Inc.',
+  publisher: 'African Communities of Manitoba Inc.',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    }
   },
   openGraph: {
-    type: "website",
-    locale: "en_CA",
-    url: "https://bhem.ca",
-    title: "BHEM - Black Heritage Experience Manitoba",
-    description: "Official website of Black Heritage Experience Manitoba showcasing our brand and mission to celebrate and preserve Black heritage in Manitoba, Canada.",
-    siteName: "BHEM - Black Heritage Experience Manitoba",
+    type: 'website',
+    locale: 'en_CA',
+    url: 'https://bhem.ca',
+    siteName: 'BHEM - Black Heritage Experience Manitoba',
+    title: 'BHEM - Black Heritage Experience Manitoba',
+    description: 'Celebrating and preserving African heritage, culture, and history in Manitoba, Canada. Join our journey to emancipation and discover our rich cultural legacy.',
     images: [
       {
-        url: "https://bhem.ca/icons/icon-512x512.png",
+        url: '/icons/icon-512x512.png',
         width: 512,
         height: 512,
-        alt: "BHEM - Black Heritage Experience Manitoba Logo",
+        alt: 'BHEM - Black Heritage Experience Manitoba Logo',
+      },
+      {
+        url: '/logo.png',
+        width: 1200,
+        height: 630,
+        alt: 'BHEM - Black Heritage Experience Manitoba',
       },
     ],
   },
   twitter: {
-    card: "summary_large_image",
-    title: "BHEM - Black Heritage Experience Manitoba",
-    description: "Official website of Black Heritage Experience Manitoba showcasing our brand and mission to celebrate and preserve Black heritage in Manitoba, Canada.",
-    images: ["https://bhem.ca/icons/icon-512x512.png"],
+    card: 'summary_large_image',
+    title: 'BHEM - Black Heritage Experience Manitoba',
+    description: 'Celebrating and preserving African heritage, culture, and history in Manitoba, Canada.',
+    images: ['/icons/icon-512x512.png'],
+  },
+  alternates: {
+    canonical: 'https://bhem.ca',
   },
   verification: {
-    google: "",
+    google: 'your-google-verification-code-here',
   },
+  other: {
+    'msvalidate.01': 'your-bing-verification-code-here',
+    'google-site-verification': 'your-google-verification-code-here',
+  }
 };
 
 export default function RootLayout({

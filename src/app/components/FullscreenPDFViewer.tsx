@@ -9,6 +9,9 @@ import LoadingSpinner from './LoadingSpinner';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
+// Import web page insertion configuration
+import { WebPageInsertion, getValidInsertions, getTitleLines } from '../config/webPageInsertions';
+
 const Document = dynamic(
   () => import('react-pdf').then((mod) => ({ default: mod.Document })),
   { ssr: false }
@@ -21,14 +24,31 @@ const Page = dynamic(
 
 interface FullscreenPDFViewerProps {
   pdfUrl?: string;
+  webPageInsertions?: WebPageInsertion[];
 }
 
 const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({ 
-  pdfUrl = "/BHEM Brand Deck-Website.pdf" 
+  pdfUrl = "/BHEM Brand Deck-Website.pdf",
+  webPageInsertions
 }) => {
+  // Use configuration file if no insertions provided via props
+  const insertions = useMemo(() => {
+    return webPageInsertions || getValidInsertions();
+  }, [webPageInsertions]);
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isShowingWebPage, setIsShowingWebPage] = useState<boolean>(false);
+  const [currentWebPageData, setCurrentWebPageData] = useState<WebPageInsertion | null>(null);
+  const [totalPages, setTotalPages] = useState<number>(0); // PDF pages + web pages
+  
+  // Initialize totalPages when insertions are ready
+  useEffect(() => {
+    if (insertions && insertions.length >= 0) {
+      setTotalPages(numPages + insertions.length);
+    }
+  }, [insertions, numPages]);
   const [isReady, setIsReady] = useState<boolean>(false);
+  const [windowSize, setWindowSize] = useState({ width: 1920, height: 1080 });
   const [hasError, setHasError] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [loadedPages, setLoadedPages] = useState<Set<number>>(new Set());
@@ -70,6 +90,23 @@ const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({
     standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@5.4.54/standard_fonts/',
     verbosity: 0,
   }), []);
+
+  // Window resize effect for responsive design
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({ 
+        width: window.innerWidth, 
+        height: window.innerHeight 
+      });
+    };
+
+    // Set initial size
+    if (typeof window !== 'undefined') {
+      handleResize();
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
 
   useEffect(() => {
     const setupPDFWorker = async () => {
@@ -161,10 +198,12 @@ const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
+    // totalPages will be set in useEffect when insertions are ready
     setHasError(false);
     
     setCurrentPage(prev => {
-      if (prev < 1 || prev > numPages) {
+      const maxPage = numPages + (insertions?.length || 0);
+      if (prev < 1 || prev > maxPage) {
         return 1;
       }
       return prev;
@@ -258,6 +297,64 @@ const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({
     }, delay);
   }, []);
 
+  // Helper function to get actual PDF page number from current page index
+  const getPDFPageNumber = useCallback((pageIndex: number) => {
+    if (!insertions || insertions.length === 0) {
+      return pageIndex;
+    }
+    
+    const pdfPageNumber = pageIndex;
+    let webPagesBeforeCurrent = 0;
+    
+    for (const insertion of insertions) {
+      const insertionPosition = insertion.location[0] + webPagesBeforeCurrent + 1; // Position after PDF page + previous web pages
+      if (pageIndex > insertionPosition) {
+        webPagesBeforeCurrent++;
+      }
+    }
+    
+    return pdfPageNumber - webPagesBeforeCurrent;
+  }, [insertions]);
+  
+  // Helper function to check if current page is a web page
+  const getWebPageData = useCallback((pageIndex: number) => {
+    if (!insertions || insertions.length === 0) {
+      return null;
+    }
+    
+    let webPagesBeforeCurrent = 0;
+    
+    for (const insertion of insertions) {
+      const insertionPosition = insertion.location[0] + webPagesBeforeCurrent + 1;
+      if (pageIndex === insertionPosition) {
+        return insertion;
+      }
+      if (pageIndex > insertionPosition) {
+        webPagesBeforeCurrent++;
+      }
+    }
+    
+    return null;
+  }, [insertions]);
+  
+  // Helper function to convert PDF page number to sequence number (considering web page insertions)
+  const getSequenceNumberFromPDFPage = useCallback((pdfPageNumber: number) => {
+    if (!insertions || insertions.length === 0) {
+      return pdfPageNumber;
+    }
+    
+    let webPagesAdded = 0;
+    
+    for (const insertion of insertions) {
+      // If PDF page is after this insertion point, add 1 to sequence number
+      if (pdfPageNumber > insertion.location[0]) {
+        webPagesAdded++;
+      }
+    }
+    
+    return pdfPageNumber + webPagesAdded;
+  }, [insertions]);
+  
   const navigateWithAnimation = useCallback((direction: 'next' | 'prev', animationDirection: 'left' | 'right' | 'up' | 'down') => {
     const now = Date.now();
     
@@ -269,13 +366,13 @@ const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({
       return;
     }
     
-    if (numPages <= 0 || currentPage < 1 || currentPage > numPages) {
+    if (totalPages <= 0 || currentPage < 1 || currentPage > totalPages) {
       return;
     }
     
     const targetPage = direction === 'next' ? currentPage + 1 : currentPage - 1;
     
-    if (targetPage < 1 || targetPage > numPages) {
+    if (targetPage < 1 || targetPage > totalPages) {
       return;
     }
     
@@ -292,6 +389,16 @@ const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({
     setTimeout(() => {
       setCurrentPage(targetPage);
       
+      // Check if target page is a web page
+      const webPageData = getWebPageData(targetPage);
+      if (webPageData) {
+        setIsShowingWebPage(true);
+        setCurrentWebPageData(webPageData);
+      } else {
+        setIsShowingWebPage(false);
+        setCurrentWebPageData(null);
+      }
+      
       setPageTransition({ direction: animationDirection, isExiting: false, isEntering: true });
       
       setTimeout(() => {
@@ -307,7 +414,7 @@ const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({
       }, 100);
     }, 200);
     
-  }, [currentPage, numPages, isNavigating, animationInitialized, restartIndicatorCarousel]);
+  }, [currentPage, totalPages, isNavigating, animationInitialized, restartIndicatorCarousel, getWebPageData]);
 
   const handleIndicatorClick = useCallback(() => {
     if (indicatorInterval.current) {
@@ -316,14 +423,16 @@ const FullscreenPDFViewer: React.FC<FullscreenPDFViewerProps> = ({
     
     setShowPageNumber(true);
     
-    if (currentPage >= numPages) {
+    if (currentPage >= totalPages) {
       setCurrentPage(1);
+      setIsShowingWebPage(false);
+      setCurrentWebPageData(null);
       restartIndicatorCarousel(1500);
     } else {
       navigateWithAnimation('next', 'right');
     }
     
-  }, [currentPage, numPages, navigateWithAnimation, restartIndicatorCarousel]);
+  }, [currentPage, totalPages, navigateWithAnimation, restartIndicatorCarousel]);
 
   const handleDonateClick = useCallback(async () => {
     const donationInfo = `BLACK HERITAGE EXPERIENCE MANITOBA
@@ -497,10 +606,7 @@ Cash or cheque welcomed for arrangements.`;
       if (viewport) {
         viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes');
       }
-      
-      setTimeout(() => {
-        window.location.reload();
-      }, 200);
+
     };
 
     setVH();
@@ -536,7 +642,24 @@ Cash or cheque welcomed for arrangements.`;
   }, []);
 
   useEffect(() => {
-    if (currentPage >= 15 && capsuleTransitionState === 'single') {
+    // Only show capsules if we have enough PDF pages
+    if (numPages < 10) {
+      return; // Don't show capsules for PDFs with less than 10 pages
+    }
+    
+    // Calculate when capsules should appear based on PDF page numbers
+    // but check against current sequence position
+    
+    // Define PDF page numbers when capsules should appear (with minimum thresholds)
+    const donatePDFPageThreshold = Math.max(15, Math.max(numPages - 5, Math.floor(numPages * 0.8)));
+    const formPDFPageThreshold = Math.max(16, Math.max(numPages - 4, Math.floor(numPages * 0.85)));
+    
+    // Convert PDF page numbers to sequence numbers (considering web insertions)
+    const donateSequenceThreshold = getSequenceNumberFromPDFPage(donatePDFPageThreshold);
+    const formSequenceThreshold = getSequenceNumberFromPDFPage(formPDFPageThreshold);
+    
+    // Check current sequence position against thresholds
+    if (currentPage >= donateSequenceThreshold && capsuleTransitionState === 'single') {
       setCapsuleTransitionState('transitioning');
       
       setTimeout(() => {
@@ -546,7 +669,7 @@ Cash or cheque welcomed for arrangements.`;
           setCapsuleTransitionState('dual');
         }, 400);
       }, 400);
-    } else if (currentPage >= 16 && capsuleTransitionState === 'dual') {
+    } else if (currentPage >= formSequenceThreshold && capsuleTransitionState === 'dual') {
       setCapsuleTransitionState('transitioning');
       
       setTimeout(() => {
@@ -557,7 +680,19 @@ Cash or cheque welcomed for arrangements.`;
         }, 400);
       }, 400);
     }
-  }, [currentPage, capsuleTransitionState]);
+  }, [currentPage, capsuleTransitionState, numPages, getSequenceNumberFromPDFPage]);
+
+  // Initialize page state on load
+  useEffect(() => {
+    const webPageData = getWebPageData(currentPage);
+    if (webPageData) {
+      setIsShowingWebPage(true);
+      setCurrentWebPageData(webPageData);
+    } else {
+      setIsShowingWebPage(false);
+      setCurrentWebPageData(null);
+    }
+  }, [getWebPageData, currentPage]);
 
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -703,7 +838,7 @@ Cash or cheque welcomed for arrangements.`;
         options={pdfOptions}
       >
         {/* Visible current page with navigation animations */}
-        {pageWidth > 0 && numPages > 0 && currentPage >= 1 && currentPage <= numPages && (
+        {pageWidth > 0 && totalPages > 0 && currentPage >= 1 && currentPage <= totalPages && (
           <div 
             className={`current-page-container ${getPageTransitionClass()}`}
             ref={pageRef}
@@ -713,19 +848,81 @@ Cash or cheque welcomed for arrangements.`;
             data-current-page={currentPage}
             data-animation-state={pageTransition.isExiting ? 'exiting' : pageTransition.isEntering ? 'entering' : 'normal'}
           >
-            <Page
-              pageNumber={currentPage}
-              width={pageWidth}
-              height={pageHeight}
-              renderTextLayer={true}
-              renderAnnotationLayer={true}
-              devicePixelRatio={8}
-              onLoadSuccess={() => onPageLoadSuccess(currentPage)}
-              onLoadError={(error) => onPageLoadError(currentPage, error)}
-              onRenderSuccess={() => {
-                setTimeout(() => synchronizeTextLayer(), 50);
-              }}
-            />
+            {isShowingWebPage && currentWebPageData ? (
+              // Web Page Display - Full Viewport
+              <div 
+                style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  width: '100vw',
+                  height: '100vh',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+                  overflow: 'hidden',
+                  zIndex: 1,
+                  padding: windowSize.width <= 768 ? '10px' : windowSize.width <= 1024 ? '15px' : '20px',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    maxWidth: '1920px',
+                    maxHeight: '1080px',
+                    aspectRatio: '16 / 9',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    '@media (max-width: 1024px)': {
+                      aspectRatio: '16 / 10'
+                    },
+                    '@media (max-width: 768px)': {
+                      aspectRatio: '4 / 3'
+                    }
+                  }}
+                >
+                  <iframe
+                    src={currentWebPageData.url}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      minWidth: windowSize.width <= 768 ? '320px' : 
+                               windowSize.width <= 1024 ? '600px' : '800px',
+                      minHeight: windowSize.width <= 768 ? '240px' : 
+                                windowSize.width <= 1024 ? '375px' : '450px',
+                      border: 'none',
+                      borderRadius: windowSize.width <= 768 ? '4px' : '8px',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+                    }}
+                    title={`Web page: ${currentWebPageData.titleLine1}`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            ) : (
+              // PDF Page Display
+              numPages > 0 && getPDFPageNumber(currentPage) >= 1 && getPDFPageNumber(currentPage) <= numPages && (
+                <Page
+                  pageNumber={getPDFPageNumber(currentPage)}
+                  width={pageWidth}
+                  height={pageHeight}
+                  renderTextLayer={true}
+                  renderAnnotationLayer={true}
+                  devicePixelRatio={8}
+                  onLoadSuccess={() => onPageLoadSuccess(getPDFPageNumber(currentPage))}
+                  onLoadError={(error) => onPageLoadError(getPDFPageNumber(currentPage), error)}
+                  onRenderSuccess={() => {
+                    setTimeout(() => synchronizeTextLayer(), 50);
+                  }}
+                />
+              )
+            )}
           </div>
         )}
 
@@ -809,7 +1006,7 @@ Cash or cheque welcomed for arrangements.`;
       </Document>
       
       {/* Bottom floating indicator using Portal to avoid transform interference */}
-      {!isLoading && numPages > 0 && typeof window !== 'undefined' && createPortal(
+      {!isLoading && totalPages > 0 && typeof window !== 'undefined' && createPortal(
         <>
           {/* CSS Keyframes for breathing glow effect */}
           <style jsx>{`
@@ -825,6 +1022,18 @@ Cash or cheque welcomed for arrangements.`;
               100% {
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 20px rgba(255, 255, 255, 0.4);
                 transform: scale(1);
+              }
+            }
+            
+            @keyframes blinkingNext {
+              0% {
+                opacity: 1;
+              }
+              50% {
+                opacity: 0.3;
+              }
+              100% {
+                opacity: 1;
               }
             }
             
@@ -859,37 +1068,57 @@ Cash or cheque welcomed for arrangements.`;
             }
           `}</style>
           
-          {/* White capsule - fixed bottom center position */}
+          {/* White capsule - fixed bottom center position - wider for custom text */}
           <button
             className="bottom-indicator"
             onClick={handleIndicatorClick}
-            style={{
-              position: 'fixed',
-              bottom: '30px',
-              left: '0',
-              right: '0',
-              margin: '0 auto',
-              opacity: 1,
-              pointerEvents: 'auto',
-              zIndex: 9999,
-              background: 'rgba(255, 255, 255, 0.9)',
-              backdropFilter: 'blur(10px)',
-              border: 'none',
-              borderRadius: '25px',
-              padding: '12px 24px',
-              fontSize: '16px',
-              fontWeight: '800',
-              color: '#333',
-              cursor: 'pointer',
-              width: '200px',
-              height: '50px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              animation: 'breathingButton 3s ease-in-out infinite',
-              userSelect: 'none',
-              WebkitUserSelect: 'none'
-            }}
+            style={(() => {
+              // Calculate dimensions based on title content (not current display)
+              const currentTitleLines = isShowingWebPage && currentWebPageData 
+                ? getTitleLines(currentWebPageData) 
+                : [];
+              const lineCount = currentTitleLines.length > 0 ? currentTitleLines.length : 1;
+              const isMultiLine = lineCount > 1;
+              
+              // Dynamic sizing based on title content (fixed regardless of showing NEXT)
+              const dynamicWidth = isMultiLine ? Math.max(280, Math.min(400, Math.max(...currentTitleLines.map(line => line.length * 8 + 80)))) : 200;
+              const dynamicHeight = isMultiLine ? 'auto' : '50px';
+              const dynamicMinHeight = isMultiLine ? Math.max(60, lineCount * 20 + 20) : 50;
+              const dynamicPadding = isMultiLine ? '10px 20px' : '12px 24px';
+              const dynamicFontSize = isMultiLine ? (lineCount > 2 ? '12px' : '14px') : '16px';
+              const dynamicBorderRadius = isMultiLine ? '30px' : '25px';
+              
+              return {
+                position: 'fixed',
+                bottom: '30px',
+                left: '0',
+                right: '0',
+                margin: '0 auto',
+                opacity: 1,
+                pointerEvents: 'auto',
+                zIndex: 9999,
+                background: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(10px)',
+                border: 'none',
+                borderRadius: dynamicBorderRadius,
+                padding: dynamicPadding,
+                fontSize: dynamicFontSize,
+                fontWeight: '800',
+                color: '#333',
+                cursor: 'pointer',
+                width: dynamicWidth + 'px',
+                height: dynamicHeight,
+                minHeight: dynamicMinHeight + 'px',
+                maxHeight: isMultiLine ? '120px' : '50px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                animation: 'breathingButton 3s ease-in-out infinite',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                transition: 'all 0.3s ease'
+              };
+            })()}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'rgba(255, 255, 255, 1)';
               e.currentTarget.style.animationPlayState = 'paused';
@@ -912,12 +1141,31 @@ Cash or cheque welcomed for arrangements.`;
             }}
           >
             <span
-              style={{
-                opacity: isTextTransitioning ? 0 : 1,
-                transition: 'opacity 0.3s ease'
-              }}
+              style={(() => {
+                const currentTitleLines = isShowingWebPage && currentWebPageData 
+                  ? getTitleLines(currentWebPageData) 
+                  : [];
+                const lineCount = currentTitleLines.length > 0 ? currentTitleLines.length : 1;
+                const isMultiLine = lineCount > 1;
+                
+                return {
+                  opacity: isTextTransitioning ? 0 : 1,
+                  transition: 'opacity 0.3s ease',
+                  textAlign: 'center',
+                  lineHeight: isMultiLine ? '1.2' : 'normal',
+                  whiteSpace: isMultiLine ? 'pre-line' : 'nowrap',
+                  wordBreak: isMultiLine ? 'break-word' : 'normal',
+                  maxWidth: '100%'
+                };
+              })()}
             >
-              {showPageNumber ? currentPage : 'NEXT'}
+              {isShowingWebPage && currentWebPageData ? (
+                showPageNumber ? 
+                  getTitleLines(currentWebPageData).join('\n') : 
+                  'NEXT'
+              ) : (
+                showPageNumber ? getPDFPageNumber(currentPage) : 'NEXT'
+              )}
             </span>
           </button>
           
@@ -927,7 +1175,14 @@ Cash or cheque welcomed for arrangements.`;
             onClick={handleDonateClick}
             style={{
               position: 'fixed',
-              bottom: showDonateCapsule ? '90px' : '30px',
+              bottom: showDonateCapsule ? (() => {
+                const currentTitleLines = isShowingWebPage && currentWebPageData 
+                  ? getTitleLines(currentWebPageData) 
+                  : [];
+                const lineCount = currentTitleLines.length > 0 ? currentTitleLines.length : 1;
+                const dynamicHeight = lineCount > 1 ? Math.max(60, lineCount * 20 + 20) : 50;
+                return (30 + dynamicHeight + 10) + 'px';
+              })() : '30px',
               left: '0',
               right: '0',
               margin: '0 auto',
@@ -1000,7 +1255,21 @@ Cash or cheque welcomed for arrangements.`;
             onClick={handleFormClick}
             style={{
               position: 'fixed',
-              bottom: showFormCapsule ? '150px' : '90px',
+              bottom: showFormCapsule ? (() => {
+                const currentTitleLines = isShowingWebPage && currentWebPageData 
+                  ? getTitleLines(currentWebPageData) 
+                  : [];
+                const lineCount = currentTitleLines.length > 0 ? currentTitleLines.length : 1;
+                const dynamicHeight = lineCount > 1 ? Math.max(60, lineCount * 20 + 20) : 50;
+                return (30 + dynamicHeight + 10 + 50 + 10) + 'px';
+              })() : (() => {
+                const currentTitleLines = isShowingWebPage && currentWebPageData 
+                  ? getTitleLines(currentWebPageData) 
+                  : [];
+                const lineCount = currentTitleLines.length > 0 ? currentTitleLines.length : 1;
+                const dynamicHeight = lineCount > 1 ? Math.max(60, lineCount * 20 + 20) : 50;
+                return (30 + dynamicHeight + 10) + 'px';
+              })(),
               left: '0',
               right: '0',
               margin: '0 auto',

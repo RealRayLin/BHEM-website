@@ -29,8 +29,11 @@
 
 ### Core Functionality
 - ✅ Next.js 15 + TypeScript + Tailwind CSS
-- ✅ FullPage.js full-screen page effects (license key configured)
+- ✅ FullscreenPDFViewer with advanced navigation system
 - ✅ React-PDF direct display of PDF page content
+- ✅ **Web Page Insertion System** - Insert interactive web pages between PDF pages
+- ✅ **Dynamic Capsule System** - Smart floating navigation with content-aware sizing
+- ✅ **TypeScript Configuration Management** - Flexible and type-safe insertion configuration
 - ✅ Responsive design - Desktop enforced 16:9 ratio
 - ✅ Mobile intelligent detection and landscape preview adaptation
 - ✅ Complete BHEM brand color scheme implementation
@@ -41,8 +44,10 @@
 - **Frontend Framework**: Next.js 15 (App Router)
 - **Type System**: TypeScript
 - **Styling System**: Tailwind CSS + Custom CSS Variables
-- **Page Transition Library**: @fullpage/react-fullpage
 - **PDF Rendering**: react-pdf + pdfjs-dist
+- **Web Page Insertion**: iframe-based with intelligent positioning
+- **Configuration System**: TypeScript-based with validation and helper functions
+- **Dynamic UI**: Content-aware capsule sizing and positioning
 - **Responsive**: CSS Media Queries + JavaScript Detection
 
 ### Brand Color Scheme
@@ -67,17 +72,20 @@ BHEMwebsite/
 ├── src/
 │   └── app/
 │       ├── components/
-│       │   └── FullPagePDFViewer.tsx    # Main PDF viewer component
-│       ├── globals.css                   # Global styles and brand colors
-│       ├── layout.tsx                    # Root layout
-│       └── page.tsx                      # Homepage
+│       │   ├── FullscreenPDFViewer.tsx     # Enhanced PDF viewer with web insertion
+│       │   ├── LoadingSpinner.tsx          # Loading component
+│       │   └── YoutubePlaylistViewer.tsx   # YouTube playlist component
+│       ├── config/
+│       │   └── webPageInsertions.ts        # Web page insertion configuration
+│       ├── globals.css                      # Global styles and brand colors
+│       ├── layout.tsx                       # Root layout
+│       ├── page.tsx                         # Homepage
+│       └── sitemap.ts                       # Sitemap configuration
 ├── public/
-│   └── BHEM Brand Deck-v2-Website.pdf # PDF file
-├── package.json                          # Dependencies configuration
-├── verify.sh                            # Verification script
-└── 0-AIGcode/
-    └── report/
-        └── BHEMwebsite-setup-report.md   # This report
+│   └── BHEM Brand Deck-Website.pdf         # PDF file
+├── package.json                             # Dependencies configuration
+├── vercel.json                              # Vercel deployment configuration
+└── README.md                                # This documentation
 
 ```
 
@@ -97,16 +105,30 @@ BHEMwebsite/
 
 ## Known Features
 
-1. **PDF Auto-pagination**: System automatically detects PDF page count and creates fullPage sections for each page
-2. **Page Number Display**: Current page/total pages shown in bottom right
-3. **Navigation System**: Right-side dot navigation with quick jump support
-4. **Keyboard Support**: Arrow key navigation
-5. **Touch Support**: Mobile swipe navigation
-6. **Text Interaction**: Support for selecting and copying PDF text content
-7. **Link Support**: PDF hyperlinks function normally
-8. **Notch Screen Adaptation**: Auto-detects and avoids device notches, intelligently adjusts navigation position
-9. **Loading States**: Loading prompt during PDF loading
-10. **Error Handling**: Error messages when PDF loading fails
+### PDF & Navigation
+1. **PDF Auto-pagination**: System automatically detects PDF page count and creates navigation for each page
+2. **Enhanced Navigation**: Smart floating capsules with content-aware sizing
+3. **Keyboard Support**: Arrow key navigation with smooth transitions
+4. **Touch Support**: Mobile swipe navigation with gesture recognition
+5. **Text Interaction**: Support for selecting and copying PDF text content
+6. **Link Support**: PDF hyperlinks function normally
+
+### Web Page Insertion System
+7. **Dynamic Web Content**: Insert interactive web pages (YouTube, maps, etc.) between PDF pages
+8. **Flexible Configuration**: TypeScript-based configuration with validation
+9. **Smart Capsule System**: 
+   - Dynamic sizing based on content length
+   - Multi-line title support (1-n lines)
+   - Intelligent positioning with proper spacing
+10. **Full Viewport Display**: Web pages render in full-screen iframe with proper embedding
+
+### Advanced Features
+11. **Capsule Appearance Logic**: Smart timing based on PDF progress, not sequence numbers
+12. **Content-Aware UI**: Capsule sizes adapt to actual text content
+13. **Smooth Transitions**: 0.3s animated transitions between states
+14. **Loading States**: Loading prompt during PDF loading with progress indication
+15. **Error Handling**: Comprehensive error handling for PDF and web content loading
+16. **Mobile Adaptation**: Responsive design with intelligent notch avoidance
 
 ## Development Environment
 
@@ -114,13 +136,54 @@ BHEMwebsite/
 - NPM package manager
 - Modern browser support
 
+## Configuration Examples
+
+### Web Page Insertion Configuration
+
+```typescript
+// src/app/config/webPageInsertions.ts
+export const webPageInsertions: WebPageInsertion[] = [
+  {
+    id: "emancipation-playlist",
+    location: [1, 2], // Insert between PDF page 1 and 2
+    url: "https://www.youtube.com/embed/videoseries?list=PLUVpFBRxKq4N5LUQ0nJY1u8PZ22M2EzE4",
+    title: [
+      "Journeying to Emancipation",
+      "Friday, August 1, 2025"
+    ],
+    enabled: true
+  },
+  {
+    id: "single-line-example", 
+    location: [5, 6],
+    url: "https://www.youtube.com/embed/VIDEO_ID",
+    title: "Single Line Title",
+    enabled: true
+  }
+];
+```
+
+### Vercel Deployment Configuration
+
+```json
+// vercel.json
+{
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  }
+}
+```
+
 ## Next Steps for Improvement
 
-1. Replace with custom HTML pages based on actual PDF content
-2. Add page transition animation effects
-3. Integrate CMS system for easier content management
-4. Add SEO optimization
-5. Performance optimization (image lazy loading, etc.)
+1. **Enhanced Web Integration**: Add more interactive web content types
+2. **Advanced Analytics**: Track user engagement with web insertions
+3. **CMS Integration**: Content management system for easy updates
+4. **SEO Optimization**: Meta tags and structured data for web pages
+5. **Performance**: Optimize iframe loading and caching strategies
+6. **Accessibility**: Enhanced keyboard navigation and screen reader support
 
 ---
 
@@ -151,8 +214,11 @@ BHEMwebsite/
 
 ### Fonctionnalités Principales
 - ✅ Next.js 15 + TypeScript + Tailwind CSS
-- ✅ Effets de page plein écran FullPage.js (clé de licence configurée)
+- ✅ FullscreenPDFViewer avec système de navigation avancé
 - ✅ Affichage direct du contenu des pages PDF avec React-PDF
+- ✅ **Système d'Insertion de Pages Web** - Insérer des pages web interactives entre les pages PDF
+- ✅ **Système de Capsules Dynamiques** - Navigation flottante intelligente avec dimensionnement adaptatif
+- ✅ **Gestion de Configuration TypeScript** - Configuration d'insertion flexible et type-safe
 - ✅ Design responsive - Ratio 16:9 forcé sur bureau
 - ✅ Détection intelligente mobile et adaptation à l'aperçu paysage
 - ✅ Implémentation complète du schéma de couleurs de marque BHEM
@@ -273,8 +339,11 @@ BHEMwebsite/
 
 ### 核心功能
 - ✅ Next.js 15 + TypeScript + Tailwind CSS
-- ✅ FullPage.js 全屏翻页效果 (已配置license key)
+- ✅ FullscreenPDFViewer 高级导航系统
 - ✅ React-PDF 直接显示PDF各页内容
+- ✅ **网页插入系统** - 在PDF页面间插入交互式网页内容
+- ✅ **动态胶囊系统** - 智能浮动导航，内容感知尺寸调整
+- ✅ **TypeScript配置管理** - 灵活且类型安全的插入配置
 - ✅ 响应式设计 - 桌面端强制16:9比例
 - ✅ 移动端智能检测并适配横屏预览
 - ✅ BHEM品牌色彩方案完整应用

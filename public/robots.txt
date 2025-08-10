@@ -1,12 +1,44 @@
+# robots.txt for BHEM - Black Heritage Experience Manitoba
+# https://bhem.ca
+
 User-agent: *
 Allow: /
 
 # Sitemap
 Sitemap: https://bhem.ca/sitemap.xml
 
-# Crawl-delay for better server performance
+# Specific directives for major search engines
+User-agent: Googlebot
+Allow: /
 Crawl-delay: 1
 
-# Disallow admin or private directories if any exist
-# Disallow: /admin/
-# Disallow: /private/
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+# Block system directories and build artifacts
+Disallow: /.next/
+Disallow: /node_modules/
+Disallow: /_next/static/webpack/
+
+# Allow important assets and content
+Allow: /icons/
+Allow: /pdf/
+Allow: /*.pdf
+Allow: /*.css
+Allow: /*.js
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.jpeg
+Allow: /*.gif
+Allow: /*.svg
+Allow: /manifest.json
+Allow: /sw.js
+
+# Temporary - Allow test files for development
+Allow: /test-pdf.html
+Allow: /reset-sw.html
