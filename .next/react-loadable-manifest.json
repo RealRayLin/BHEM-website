@@ -1,15 +1,17 @@
 {
   "app/components/FullscreenPDFViewer.tsx -> react-pdf": {
-    "id": "app/components/FullscreenPDFViewer.tsx -> react-pdf",
+    "id": 5268,
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_react-pdf_dist_index_js.js"
+      "static/chunks/685f7497.1b28a4f476e89dc8.js",
+      "static/chunks/84.efd3af243588aec1.js"
     ]
   },
   "app/page.tsx -> ./components/FullscreenPDFViewer": {
-    "id": "app/page.tsx -> ./components/FullscreenPDFViewer",
+    "id": 7164,
     "files": [
-      "static/css/_app-pages-browser_src_app_components_FullscreenPDFViewer_tsx.css",
-      "static/chunks/_app-pages-browser_src_app_components_FullscreenPDFViewer_tsx.js"
+      "static/css/1dfb5e71b60cea90.css",
+      "static/chunks/19.0239c99bc1695299.js",
+      "static/chunks/164.c6f343194941d278.js"
     ]
   }
 }

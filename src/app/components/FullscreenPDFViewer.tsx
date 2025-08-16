@@ -874,16 +874,11 @@ Cash or cheque welcomed for arrangements.`;
                     height: '100%',
                     maxWidth: '1920px',
                     maxHeight: '1080px',
-                    aspectRatio: '16 / 9',
+                    aspectRatio: windowSize.width <= 768 ? '4 / 3' : 
+                               windowSize.width <= 1024 ? '16 / 10' : '16 / 9',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    '@media (max-width: 1024px)': {
-                      aspectRatio: '16 / 10'
-                    },
-                    '@media (max-width: 768px)': {
-                      aspectRatio: '4 / 3'
-                    }
+                    justifyContent: 'center'
                   }}
                 >
                   <iframe
