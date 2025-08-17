@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     default: 'BHEM - Black Heritage Experience Manitoba',
     template: '%s | BHEM - Black Heritage Experience Manitoba'
   },
-  description: 'Black Heritage Experience Manitoba (BHEM) - Celebrating and preserving African heritage, culture, and history in Manitoba, Canada. Explore our journey to emancipation and rich cultural legacy.',
+  description: 'Black Heritage Experience Manitoba (BHEM) - Celebrating and preserving African heritage, culture, and history in Manitoba, Canada.',
   keywords: ['Black Heritage', 'African Canadian Heritage', 'Manitoba History', 'Cultural Heritage', 'Emancipation', 'Black History Museum', 'BHEM', 'African Communities Manitoba', 'Black History Canada', 'Heritage Preservation', 'Cultural Education', 'Community Heritage'],
   authors: [{ name: 'African Communities of Manitoba Inc.' }],
   creator: 'African Communities of Manitoba Inc.',
